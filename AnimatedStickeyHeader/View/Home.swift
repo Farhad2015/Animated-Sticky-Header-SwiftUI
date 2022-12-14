@@ -17,6 +17,7 @@ struct Home: View {
                 //MARK: Artwork
                 ArtWork()
                 GeometryReader{ proxy in
+                    let minY = proxy.frame(in: .named("SCROLL")).minY - safeArea.top
                     Button {
                         
                     } label: {
@@ -32,9 +33,11 @@ struct Home: View {
                             }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .offset(y: minY < 50 ? -(minY - 50) : 0)
                 }
                 .frame(height: 50)
                 .padding(.top, -34)
+                .zIndex(1)
                 
                 VStack{
                     Text("Popular")
@@ -44,6 +47,7 @@ struct Home: View {
                     AlbumView()
                 }
                 .padding(.top, 10)
+                .zIndex(0)
             }
             .overlay(alignment: .top){
                 HeaderView()
@@ -58,7 +62,7 @@ struct Home: View {
         GeometryReader{proxy in
             let size = proxy.size
             let minY = proxy.frame(in: .named("SCROLL")).minY
-            let progress = minY / (height * 0.8)
+            let progress = minY / (height * (minY > 0 ? 0.5 : 0.8))
             Image("Artwork")
                 .resizable()
                 .aspectRatio(contentMode: .fill)
@@ -78,8 +82,8 @@ struct Home: View {
                                 .black.opacity(1)
                             ], startPoint: .top, endPoint: .bottom))
                         VStack(spacing: 0){
-                            Text("Jan\nBlomqvist")
-                                .font(.system(size: 45))
+                            Text("Mahmudur Rahman")
+                                .font(.system(size: 35))
                                 .fontWeight(.bold)
                                 .multilineTextAlignment(.center)
                             
@@ -89,6 +93,9 @@ struct Home: View {
                                 .foregroundColor(.gray)
                                 .padding(.top, 15)
                         }
+                        .opacity(1 + (progress > 0 ? -progress : progress))
+                        .padding(.bottom, 55)
+                        .offset(y: minY < 0 ? minY : 0)
                     }
                 })
                 .offset(y: -minY)
@@ -129,6 +136,9 @@ struct Home: View {
     func HeaderView()->some View{
         GeometryReader{proxy in
             let minY = proxy.frame(in: .named("SCROLL")).minY
+            let height = size.height * 0.45
+            let progress = minY / (height * (minY > 0 ? 0.5 : 0.8))
+            let titleProgress = minY / height
             HStack(spacing: 15) {
                 Button {
                     
@@ -151,6 +161,7 @@ struct Home: View {
                         .padding(.vertical, 6)
                         .border(.white, width: 1)
                 }
+                .opacity(1 + progress)
                 
                 Button {
                     
@@ -160,8 +171,18 @@ struct Home: View {
                         .foregroundColor(.white)
                 }
             }
+            .overlay(content: {
+                Text("Mahmudur Rahman")
+                    .fontWeight(.semibold)
+                    .offset(y: -titleProgress > 0.75 ? 0 : 45)
+                    .clipped()
+                    .animation(.easeInOut(duration: 0.25), value: -titleProgress > 0.75)
+            })
             .padding(.top, safeArea.top + 10)
             .padding([.horizontal, .bottom], 15)
+            .background(content: {
+                Color.black.opacity(-progress > 1 ? 1 : 0)
+            })
             .offset(y: -minY)
         }
         .frame(height: 35)
